@@ -21,7 +21,8 @@ ${about.trim()}
 
 let cached: string | undefined;
 
-// Server-only: reads content/about.md from disk once per server instance.
+// Server-only: reads content/about.md via process.cwd(); Next file tracing must include it (checked in build output).
+// Reads content/about.md from disk once per server instance.
 export function getSystemPrompt(): string {
   cached ??= buildSystemPrompt(
     readFileSync(join(process.cwd(), "content", "about.md"), "utf8"),

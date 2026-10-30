@@ -149,6 +149,29 @@ describe("POST /api/chat", () => {
       undefined,
     ],
     [
+      "oversized earlier message",
+      {
+        messages: [
+          { role: "user", content: "a".repeat(1001) },
+          { role: "assistant", content: "ok" },
+          { role: "user", content: "hi" },
+        ],
+      },
+      undefined,
+    ],
+    [
+      "empty assistant message in history",
+      {
+        messages: [
+          { role: "user", content: "a" },
+          { role: "assistant", content: "" },
+          { role: "user", content: "b" },
+        ],
+      },
+      undefined,
+    ],
+    ["whitespace-only user message", { messages: [{ role: "user", content: "   " }] }, undefined],
+    [
       "oversized history",
       {
         messages: Array.from({ length: 21 }, (_, i) => ({
