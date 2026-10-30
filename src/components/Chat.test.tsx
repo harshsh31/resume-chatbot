@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Chat from "./Chat";
 
@@ -83,6 +89,60 @@ describe("streaming render", () => {
       { role: "assistant", content: "answer" },
       { role: "user", content: "two" },
     ]);
+  });
+});
+
+describe("history hygiene", () => {
+  // r[verify chat-ui.shows-errors]
+  it("treats an empty 200 reply as an error and never sends empty history", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(""));
+    fetchMock.mockResolvedValue(new Response("ok"));
+    const { container } = render(<Chat />);
+    const user = await send("hi");
+    expect((await screen.findByRole("alert")).textContent).toMatch(
+      /something went wrong, please try again/i,
+    );
+    expect(container.querySelectorAll(".message-assistant")).toHaveLength(0);
+    await user.type(inputEl(), "again");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(
+      body.messages.every((m: { content: string }) => m.content.trim() !== ""),
+    ).toBe(true);
+  });
+
+  // r[verify chat-ui.streams-into-view]
+  it("trims the payload to <=20 messages starting with user and ending with the new message", async () => {
+    fetchMock.mockImplementation(async () => new Response("a"));
+    const { container } = render(<Chat />);
+    for (let i = 0; i < 12; i++) {
+      fireEvent.change(inputEl(), { target: { value: `q${i}` } });
+      // enabled only once the previous stream has finished
+      await waitFor(() =>
+        expect(
+          (screen.getByRole("button", { name: /send/i }) as HTMLButtonElement)
+            .disabled,
+        ).toBe(false),
+      );
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
+      await waitFor(() =>
+        expect(container.querySelectorAll(".message-assistant")).toHaveLength(
+          i + 1,
+        ),
+      );
+    }
+    expect(container.querySelectorAll(".message")).toHaveLength(24);
+    fireEvent.change(inputEl(), { target: { value: "last" } });
+    fireEvent.click(screen.getByRole("button", { name: /send/i }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(13));
+    const msgs = JSON.parse(fetchMock.mock.calls[12][1].body).messages;
+    expect(msgs.length).toBeLessThanOrEqual(20);
+    expect(msgs[0].role).toBe("user");
+    expect(msgs[msgs.length - 1]).toEqual({ role: "user", content: "last" });
+    expect(
+      container.querySelectorAll(".message").length,
+    ).toBeGreaterThanOrEqual(25);
   });
 });
 
