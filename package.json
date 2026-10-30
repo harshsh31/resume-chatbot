@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "eval": "node evals/run.ts",
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
