@@ -1,0 +1,120 @@
+/* r[impl chat-ui.mobile-friendly] */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  max-width: 100%;
+  font-family: system-ui, sans-serif;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.75rem;
+}
+
+@media (min-width: 700px) {
+  .chat {
+    max-width: 720px;
+  }
+}
+
+.chat-title {
+  font-size: 1.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.chat-messages {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 0.5rem;
+  overflow-y: auto;
+}
+
+.message {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  max-width: 100%;
+  min-width: 0;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.message-user {
+  align-self: flex-end;
+  background: #dbeafe;
+}
+
+.message-assistant {
+  align-self: flex-start;
+  background: #f1f5f9;
+}
+
+.starters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.starter {
+  max-width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #94a3b8;
+  border-radius: 1rem;
+  background: #fff;
+  font: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.chat-error {
+  margin: 0.5rem 0 0;
+  color: #b91c1c;
+  overflow-wrap: anywhere;
+}
+
+.chat-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.chat-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  font-size: 16px; /* >=16px avoids iOS zoom on focus */
+}
+
+.chat-send {
+  padding: 0.5rem 1rem;
+  font-size: 16px;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
