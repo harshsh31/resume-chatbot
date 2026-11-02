@@ -30,6 +30,12 @@ function clientIp(req: Request): string {
   return forwarded || req.headers.get("x-real-ip") || "unknown";
 }
 
+// Status or error name only: never the key or message text.
+function logUpstream(e: unknown) {
+  const err = e as { status?: number; name?: string };
+  console.error("chat upstream failed", err?.status ?? err?.name);
+}
+
 // r[impl chat-assistant.streams-replies]
 // r[impl chat-assistant.model-from-env]
 // r[impl abuse-protection.fails-safe-without-key]
@@ -63,7 +69,8 @@ export async function POST(req: Request): Promise<Response> {
       system: getSystemPrompt(),
       messages: parsed.messages,
     });
-  } catch {
+  } catch (e) {
+    logUpstream(e);
     return json({ error: "Server error" }, 500);
   }
 
@@ -79,8 +86,9 @@ export async function POST(req: Request): Promise<Response> {
             controller.enqueue(encoder.encode(event.delta.text));
           }
         }
-      } catch {
+      } catch (e) {
         // Upstream failure mid-stream: end the response without leaking details.
+        logUpstream(e);
       }
       try {
         controller.close();

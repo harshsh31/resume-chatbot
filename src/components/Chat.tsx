@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { MAX_TOTAL_CHARS } from "@/lib/validate";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -45,6 +46,9 @@ export default function Chat() {
     const payload = history
       .filter((m) => m.content.trim() !== "")
       .slice(-MAX_HISTORY);
+    // server also caps total characters: drop oldest turns until under it
+    const size = () => payload.reduce((n, m) => n + m.content.length, 0);
+    while (payload.length > 1 && size() > MAX_TOTAL_CHARS) payload.shift();
     while (payload[0]?.role === "assistant") payload.shift();
     setMessages([...history, { role: "assistant", content: "" }]);
     setInput("");

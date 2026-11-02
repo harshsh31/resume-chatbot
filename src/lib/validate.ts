@@ -39,8 +39,7 @@ export function validateChatBody(body: unknown): ValidationResult {
   }
   if (total > MAX_TOTAL_CHARS) return { ok: false };
   const last = typed[typed.length - 1];
-  if (last.role !== "user" || last.content.length > MAX_MESSAGE_CHARS)
-    return { ok: false };
+  if (last.role !== "user") return { ok: false };
   return {
     ok: true,
     messages: typed.map(({ role, content }) => ({ role, content })),

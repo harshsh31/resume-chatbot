@@ -42,7 +42,7 @@ Checks run in this order (`src/app/api/chat/route.ts`): API key present, per-IP 
 
 ## Getting started
 
-Prerequisites: Node.js 22 or later and an Anthropic API key.
+Prerequisites: Node.js 22.18 or later and an Anthropic API key.
 
 ```bash
 npm install

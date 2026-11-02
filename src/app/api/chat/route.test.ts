@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -136,7 +137,7 @@ describe("POST /api/chat", () => {
   // r[verify chat-assistant.answers-from-about-only]
   it("sends a system prompt built from content/about.md", async () => {
     await (await POST(req(valid))).text();
-    expect(mocks.stream.mock.calls[0][0].system).toContain("TODO(Harsh)");
+    expect(mocks.stream.mock.calls[0][0].system).toContain(readFileSync("content/about.md", "utf8").trim().split("\n")[0]);
   });
 
   // r[verify abuse-protection.caps-message-and-history-size]
@@ -257,5 +258,30 @@ describe("POST /api/chat", () => {
   it("reads the key from the server env var only", async () => {
     await (await POST(req(valid))).text();
     expect(mocks.ctor).toHaveBeenCalledWith({ apiKey: KEY });
+  });
+
+  it("logs only the status or error name when the upstream fails mid-stream", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.stream.mockImplementation(() =>
+      (async function* () {
+        throw Object.assign(new Error(`boom ${KEY}`), { status: 401 });
+      })(),
+    );
+    const res = await POST(req(valid));
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe("");
+    expect(spy).toHaveBeenCalledWith("chat upstream failed", 401);
+    expect(JSON.stringify(spy.mock.calls)).not.toContain(KEY);
+    spy.mockRestore();
+  });
+
+  it("aborts the upstream stream when the client cancels", async () => {
+    const abort = vi.fn();
+    mocks.stream.mockImplementation(() =>
+      Object.assign(events("Hello"), { abort }),
+    );
+    const res = await POST(req(valid));
+    await res.body!.cancel();
+    expect(abort).toHaveBeenCalled();
   });
 });

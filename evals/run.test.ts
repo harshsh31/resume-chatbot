@@ -60,4 +60,10 @@ describe('runEval', () => {
     expect(r.exitCode).toBe(1);
     expect(r.passed).toBe(0);
   });
+
+  it('fails when the endpoint returns an empty 200 body', async () => {
+    const baseUrl = await stub(() => ({ status: 200, body: '' }));
+    const r = await runEval({ baseUrl, cases: [cases[0]], ...opts });
+    expect(r.exitCode).toBe(1);
+  });
 });

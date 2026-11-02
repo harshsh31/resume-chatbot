@@ -45,7 +45,7 @@ export async function runEval(o: Opts) {
           await sleep((Number.isFinite(secs) && secs > 0 ? secs : 60) * 1000);
           continue;
         }
-        if (status === 200) reply = await res.text(); // read stream fully
+        if (status === 200) reply = (await res.text()) || undefined; // empty body = upstream failure
         break;
       }
       verdict = reply === undefined ? { pass: false, reason: `HTTP ${status}` } : runCheck(reply, c);
@@ -60,7 +60,7 @@ export async function runEval(o: Opts) {
   return { passed, total: cases.length, exitCode: passed === cases.length ? 0 : 1 };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.filename === process.argv[1]) {
   const baseUrl = process.env.EVAL_BASE_URL ?? 'http://localhost:3000';
   runEval({ baseUrl, cases: loadCases() }).then((r) => process.exit(r.exitCode));
 }
